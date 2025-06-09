@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Input Manifest - {{ active_excel_file if active_excel_file else "Pilih File" }}</title>
+    <style>
+        /* === CSS LENGKAP === */
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background-color: #f4f7f6; /* Latar terang */
+            color: #333; /* Teks gelap */
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .overall-container { 
+            max-width: 900px; 
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #ffffff; /* Kontainer terang */
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: background-color 0.3s;
+        }
+        h1, h2, h3 { 
+            color: #2c3e50; /* Teks heading gelap */
+            margin-bottom: 0.75em;
+            text-align: center;
+        }
+        h1 { font-size: 2em; margin-bottom: 20px;}
+        h2 { font-size: 1.5em; margin-top: 1.5em;}
+        h3 { font-size: 1.2em; color: #34495e; text-align: left; margin-bottom:15px;}
+
+        .tab-navigation { display: flex; flex-wrap: wrap; justify-content: center; margin-bottom: 25px; border-bottom: 2px solid #e0e0e0; }
+        .tab-button { padding: 10px 15px; cursor: pointer; background-color: #f0f0f0; border: none; color: #555; font-size: 1em; margin: 0 5px 5px 5px; border-radius: 5px 5px 0 0; transition: background-color 0.3s, color 0.3s; }
+        .tab-button:hover { background-color: #e9e9e9; color: #333; }
+        .tab-button.active { background-color: #ffffff; color: #3498db; border-top: 2px solid #3498db; border-left: 1px solid #e0e0e0; border-right: 1px solid #e0e0e0; border-bottom: 2px solid #ffffff; position: relative; top: 2px; margin-bottom: -2px;}
+        
+        .tab-content { display: none; padding: 20px; background-color: #ffffff; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 8px 8px; }
+        .tab-content.active { display: block; }
+        
+        .beranda-container .form-group { max-width: 500px; margin-left: auto; margin-right: auto; text-align: left; }
+        .beranda-container .file-option-group { background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #e0e0e0; }
+        .beranda-container .file-option-group h3 { margin-top: 0; color: #34495e; text-align: left; }
+        .beranda-container .file-option-group label { margin-right: 15px; color: #444; }
+        .beranda-container .file-input-conditional { margin-top: 15px; padding-left: 0; }
+        .beranda-container .file-input-conditional label { font-weight: normal; }
+        .beranda-container .btn-lanjut { margin-top: 20px; }
+        .current-active-file { margin-bottom:20px; padding: 10px; background-color: #4CAF50; color: white; border-radius: 5px; display: inline-block; }
+        
+        .form-group { margin-bottom: 18px; position: relative; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; color: #444; }
+        input[type="text"], input[type="date"], input[type="password"], select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 1em; background-color: #fff; color: #333; }
+        input[type="text"]::placeholder, textarea::placeholder, input[type="password"]::placeholder { color: #aaa; opacity: 1; }
+        input[type="text"]:-ms-input-placeholder, textarea:-ms-input-placeholder, input[type="password"]:-ms-input-placeholder { color: #aaa; }
+        input[type="text"]::-ms-input-placeholder, textarea::-ms-input-placeholder, input[type="password"]::-ms-input-placeholder { color: #aaa; }
+        input[type="date"] { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
+        select option { background-color: #fff; color: #333; } 
+        input[type="text"]:focus, input[type="date"]:focus, input[type="password"]:focus, select:focus, textarea:focus { border-color: #3498db; outline: none; box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2); }
+        textarea { min-height: 80px; resize: vertical; }
+        
+        .form-buttons-container { display: flex; justify-content: center; gap: 15px; margin-top: 25px; }
+        .form-buttons-container button { display: inline-block; width: auto; min-width: 180px; margin: 0; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 1.05em; font-weight: 600; transition: background-color 0.2s ease; }
+        button[type="submit"] { background-color: #3498db; color: white; }
+        button[type="submit"]:hover { background-color: #2980b9; }
+        #btnToggleLanjutan { background-color: #5cb85c; color: white; }
+        #btnToggleLanjutan:hover { background-color: #4cae4c; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 25px; }
+        th, td { border: 1px solid #ddd; padding: 10px 12px; text-align: left; font-size: 0.90em; color: #444; }
+        th { background-color: #f0f2f5; font-weight: 600; color: #34495e; text-align: center; }
+        tr { background-color: #fff; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        tr:hover { background-color: #f1f5f8; }
+        .no-data { text-align: center; padding: 25px; color: #777; font-style: italic; }
+        hr { border: 0; height: 1px; background-color: #e0e0e0; margin-top: 40px; margin-bottom: 30px; }
+        
+        .flash-messages { list-style-type: none; padding: 0; margin: 0 0 20px 0; }
+        .flash-messages li { padding: 12px 18px; margin-bottom: 12px; border-radius: 5px; border-width: 1px; border-style: solid; font-size: 0.95em; display: flex; align-items: center; }
+        .flash-messages li::before { margin-right: 10px; font-weight: bold; }
+        .flash-messages .success { color: #155724; background-color: #d4edda; border-color: #c3e6cb; }
+        .flash-messages .success::before { content: "✔"; }
+        .flash-messages .danger { color: #721c24; background-color: #f8d7da; border-color: #f5c6cb; }
+        .flash-messages .danger::before { content: "✖"; }
+        .flash-messages .info { color: #0c5460; background-color: #d1ecf1; border-color: #bee5eb; }
+        .flash-messages .info::before { content: "ℹ"; }
+        .flash-messages .warning { color: #856404; background-color: #fff3cd; border-color: #ffeeba; }
+        .flash-messages .warning::before { content: "⚠"; }
+        
+        .table-wrapper { overflow-x: auto; }
+        input:invalid, select:invalid, textarea:invalid { border-left: 5px solid #d9534f; } 
+        .validation-message { display: block; font-size: 0.85em; color: #d9534f; margin-top: 4px; }
+        .validation-message.warning { color: #f0ad4e; }
+        input.valid { border-left: 5px solid #5cb85c; } 
+        input.invalid { border-left: 5px solid #d9534f; } 
+        input.warning-border { border-left: 5px solid #f0ad4e !important; }
+        .action-link { color: #3498db; text-decoration: none; margin-right: 10px; padding: 3px 6px; border-radius: 3px; }
+        .action-link:hover { text-decoration: underline; color: #5dade2; }
+        .action-button { background-color: transparent; border: 1px solid; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 0.9em; margin-left: 5px; }
+        .action-button.delete { color: #d9534f; border-color: #d9534f;}
+        .action-button.delete:hover { background-color: #d9534f; color: white; }
+        .action-button.approve { color: #5cb85c; border-color: #5cb85c; }
+        .action-button.approve:hover { background-color: #5cb85c; color: white; }
+        .action-button.reject { color: #f0ad4e; border-color: #f0ad4e; }
+        .action-button.reject:hover { background-color: #f0ad4e; color: white; }
+        .nav-back-link { display: inline-block; margin-bottom: 20px; padding: 8px 15px; background-color: #777; color: white; text-decoration: none; border-radius: 5px; font-size: 0.9em; }
+        .nav-back-link:hover { background-color: #888; }
+        .pagination { margin-top: 20px; text-align: center; }
+        .pagination a, .pagination strong, .pagination span { display: inline-block; padding: 6px 12px; margin: 0 2px; border: 1px solid #ccc; border-radius: 4px; color: #5fa2db; text-decoration: none; }
+        .pagination a:hover { background-color: #eee; color: #333; }
+        .pagination strong.current-page { background-color: #3498db; color: white; border-color: #3498db; }
+        .pagination span.ellipsis { border: none; padding: 6px 0; }
+        #form-lanjutan { display: none; margin-top: 20px; padding-top: 20px; border-top: 1px dashed #ccc; }
+        .user-info { text-align: right; margin-bottom: 15px; font-size: 0.9em; color: #555;}
+        .user-info strong { color: #333; }
+        .user-info a { color: #d9534f; text-decoration: none; margin-left: 15px; }
+        .user-info a:hover { text-decoration: underline; }
+        .user-management-section { margin-top: 20px; }
+        .user-management-section h4 { color: #444; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px;}
+        .user-list { list-style-type: none; padding: 0; }
+        .user-list li { background-color: #f9f9f9; padding: 10px 15px; margin-bottom: 8px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #eee;}
+        .user-list .user-details { color: #333; }
+        .user-list .user-role { font-style: italic; font-size: 0.9em; color: #777; margin-left:10px;}
+        .user-list .user-status-pending { color: #f0ad4e; font-weight: bold; } 
+        .user-list .actions form { display: inline-block; margin-left: 5px;}
+        .user-list .actions .action-button { font-size: 0.85em; padding: 3px 8px; }
+        
+        .theme-toggle-button {
+            position: fixed;
+            top: 15px;
+            right: 20px;
+            padding: 8px 12px;
+            background-color: #777; 
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 1000; 
+            font-size: 0.9em;
+            transition: background-color 0.3s;
+        }
+        .theme-toggle-button:hover {
+            background-color: #888;
+        }
+
+        body.dark-theme-active { background-color: #222; color: #eee; }
+        body.dark-theme-active .overall-container { background-color: #2c2c2c; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        body.dark-theme-active h1, body.dark-theme-active h2, body.dark-theme-active h3 { color: #e0e0e0; }
+        body.dark-theme-active .tab-navigation { border-bottom: 2px solid #444; }
+        body.dark-theme-active .tab-button { background-color: #3a3a3a; color: #ccc; }
+        body.dark-theme-active .tab-button:hover { background-color: #4f4f4f; color: #fff; }
+        body.dark-theme-active .tab-button.active { background-color: #333; color: #3498db; border-top: 2px solid #3498db; border-left: 1px solid #444; border-right: 1px solid #444; border-bottom: 2px solid #333;}
+        body.dark-theme-active .tab-content { background-color: #333; border: 1px solid #444; border-top: none; }
+        body.dark-theme-active .beranda-container .file-option-group { background-color: #3f3f3f; border: 1px solid #555; }
+        body.dark-theme-active .beranda-container .file-option-group h3 { color: #e0e0e0; }
+        body.dark-theme-active .beranda-container .file-option-group label { color: #ccc; }
+        body.dark-theme-active label { color: #ccc; }
+        body.dark-theme-active input[type="text"], 
+        body.dark-theme-active input[type="date"], 
+        body.dark-theme-active input[type="password"], 
+        body.dark-theme-active select, 
+        body.dark-theme-active textarea { border: 1px solid #555; background-color: #444; color: #fff; }
+        body.dark-theme-active input[type="text"]::placeholder, 
+        body.dark-theme-active textarea::placeholder, 
+        body.dark-theme-active input[type="password"]::placeholder { color: #999; }
+        body.dark-theme-active select option { background-color: #444; color: #fff; }
+        body.dark-theme-active input[type="text"]:focus, 
+        body.dark-theme-active input[type="date"]:focus, 
+        body.dark-theme-active input[type="password"]:focus, 
+        body.dark-theme-active select:focus, 
+        body.dark-theme-active textarea:focus { border-color: #5fa2db; box-shadow: 0 0 0 2px rgba(95, 162, 219, 0.5); }
+        body.dark-theme-active table { }
+        body.dark-theme-active th, body.dark-theme-active td { border: 1px solid #555; color: #ddd; }
+        body.dark-theme-active th { background-color: #4a4a4a; color: #fff; }
+        body.dark-theme-active tr { background-color: #383838; }
+        body.dark-theme-active tr:nth-child(even) { background-color: #404040; }
+        body.dark-theme-active tr:hover { background-color: #4f4f4f; }
+        body.dark-theme-active .no-data { color: #aaa; }
+        body.dark-theme-active hr { background-color: #555; }
+        body.dark-theme-active .flash-messages .success { color: #D4EFDF; background-color: #1B5E20; border-color: #2E7D32; }
+        body.dark-theme-active .flash-messages .danger { color: #FADBD8; background-color: #B71C1C; border-color: #D32F2F; }
+        body.dark-theme-active .flash-messages .info { color: #D6EAF8; background-color: #0D47A1; border-color: #1565C0; }
+        body.dark-theme-active .flash-messages .warning { color: #856404; background-color: #fff3cd; border-color: #ffeeba; }
+        body.dark-theme-active .validation-message { color: #e74c3c; }
+        body.dark-theme-active .validation-message.warning { color: #f0ad4e; }
+        body.dark-theme-active input.valid { border-left: 5px solid #28a745; }
+        body.dark-theme-active input.invalid { border-left: 5px solid #e74c3c; }
+        body.dark-theme-active input.warning-border { border-left: 5px solid #f0ad4e !important; }
+        body.dark-theme-active .action-link { color: #5fa2db; }
+        body.dark-theme-active .action-link:hover { color: #7dc0f5; }
+        body.dark-theme-active .action-button.delete { color: #e74c3c; border-color: #e74c3c;}
+        body.dark-theme-active .action-button.delete:hover { background-color: #e74c3c; color: white; }
+        body.dark-theme-active .action-button.approve { color: #5cb85c; border-color: #5cb85c; }
+        body.dark-theme-active .action-button.approve:hover { background-color: #5cb85c; color: white; }
+        body.dark-theme-active .action-button.reject { color: #f0ad4e; border-color: #f0ad4e; }
+        body.dark-theme-active .action-button.reject:hover { background-color: #f0ad4e; color: white; }
+        body.dark-theme-active .nav-back-link { background-color: #555; }
+        body.dark-theme-active .nav-back-link:hover { background-color: #666; }
+        body.dark-theme-active .pagination a, body.dark-theme-active .pagination strong, body.dark-theme-active .pagination span { border: 1px solid #555; color: #ccc; }
+        body.dark-theme-active .pagination a:hover { background-color: #4f4f4f; color: #fff; }
+        body.dark-theme-active .pagination strong.current-page { background-color: #3498db; color: white; border-color: #3498db; }
+        body.dark-theme-active #form-lanjutan { border-top: 1px dashed #555; }
+        body.dark-theme-active .user-info { color: #ccc; }
+        body.dark-theme-active .user-info strong { color: #fff; }
+        body.dark-theme-active .user-info a { color: #e74c3c; }
+        body.dark-theme-active .user-management-section h4 { color: #d0d0d0; border-bottom: 1px solid #444;}
+        body.dark-theme-active .user-list li { background-color: #3a3a3a; }
+        body.dark-theme-active .user-list .user-details { color: #ccc; }
+        body.dark-theme-active .user-list .user-role { color: #aaa; }
+        body.dark-theme-active .user-list .user-status-pending { color: #f0ad4e; }
+        body.dark-theme-active .theme-toggle-button { background-color: #444; } 
+        body.dark-theme-active .theme-toggle-button:hover { background-color: #555; }
+    </style>
+</head>
+<body>
+    <div class="overall-container">
+        <button id="themeToggleBtn" class="theme-toggle-button" onclick="toggleTheme()">Ubah Tema</button>
+
+        {% if user and user.is_authenticated %}
+            <div class="user-info">
+                Login sebagai: <strong>{{ user.username }}</strong> 
+                {% if user.role == 'superuser' %}(Superuser){% elif user.role == 'user' %}(User){% else %}({{user.role}}){% endif %}
+                <a href="{{ url_for('logout_route') }}">Logout</a>
+            </div>
+        {% endif %}
+
+        <h1>Aplikasi Input Manifest</h1>
+
+        <div class="tab-navigation">
+            <button class="tab-button" onclick="openTab(event, 'beranda')">Beranda & Pilih File</button>
+            <button class="tab-button" onclick="openTab(event, 'input')">Input/Edit Data</button>
+            <button class="tab-button" onclick="openTab(event, 'preview')">Preview Data Aktif</button>
+            {% if user and user.is_authenticated and user.role == 'superuser' %}
+            <button class="tab-button" onclick="openTab(event, 'manage_users')">Manajemen User</button>
+            {% endif %}
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <ul class="flash-messages">
+                {% for category, message in messages %}
+                    <li class="{{ category }}">{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <div id="beranda" class="tab-content">
+            <h3>Pilih atau Buat File Excel</h3>
+            {% if active_excel_file %}
+                <p class="current-active-file">File Aktif Saat Ini: <strong>{{ active_excel_file }}</strong> 
+                    (<a href="{{ url_for('download_file_route', filename=active_excel_file) }}" class="action-link" style="color:white; text-decoration:underline;">Unduh File Aktif</a>)
+                </p>
+            {% else %}
+                <p>Belum ada file aktif yang dipilih. Silakan pilih atau buat file baru untuk melanjutkan.</p>
+            {% endif %}
+            <form action="{{ url_for('set_active_file_route') }}" method="POST" class="beranda-container" style="padding-top:0;">
+                <div class="file-option-group" style="max-width:none; margin-left:0; margin-right:0;">
+                    <label>
+                        <input type="radio" name="file_choice" value="existing_file" 
+                               {% if not (form_data and form_data.get('file_choice') == 'new_file') %}checked{% endif %} 
+                               onchange="toggleBerandaFileInputs()"> Gunakan File yang Ada
+                    </label>
+                    <label>
+                        <input type="radio" name="file_choice" value="new_file" 
+                               {% if form_data and form_data.get('file_choice') == 'new_file' %}checked{% endif %} 
+                               onchange="toggleBerandaFileInputs()"> Buat File Baru
+                    </label>
+                    <div id="berandaExistingFileGroup" class="file-input-conditional">
+                        <label for="beranda_existing_excel_filename">Pilih File:</label>
+                        <select id="beranda_existing_excel_filename" name="existing_excel_filename">
+                            {% if available_files %}
+                                {% for file_name in available_files %}
+                                    <option value="{{ file_name }}" 
+                                            {% if session.active_excel_file == file_name %}selected
+                                            {% elif form_data and form_data.get('existing_excel_filename') == file_name %}selected
+                                            {% elif not form_data and not session.active_excel_file and file_name == default_excel_file %}selected
+                                            {% endif %}>
+                                        {{ file_name }}
+                                    </option>
+                                {% endfor %}
+                            {% else %}
+                                <option value="" disabled selected>Tidak ada file .xlsx di folder '{{ EXCEL_STORAGE_DIR if EXCEL_STORAGE_DIR else "excel_files" }}'</option>
+                            {% endif %}
+                        </select>
+                        {% if not available_files %}
+                            <p style="font-size:0.9em; color:#aaa;">Tips: Buat file baru atau pastikan file .xlsx ada di direktori '{{ EXCEL_STORAGE_DIR if EXCEL_STORAGE_DIR else "excel_files" }}'.</p>
+                        {% endif %}
+                    </div>
+                    <div id="berandaNewFileGroup" class="file-input-conditional" style="display: none;">
+                        <label for="beranda_new_excel_filename">Nama File Baru (tanpa .xlsx):</label>
+                        <input type="text" id="beranda_new_excel_filename" name="new_excel_filename" placeholder="Contoh: manifest_umroh_2025"
+                               value="{{ form_data.get('new_excel_filename', '') if form_data else '' }}">
+                    </div>
+                    <button type="submit" class="btn-lanjut">Set File Aktif & Lanjut ke Input</button>
+                </div>
+            </form>
+            <hr>
+            <h4>Daftar File Excel Tersedia:</h4>
+            {% if available_files %}
+                <ul class="user-list" style="max-width: 500px; margin: 10px auto;">
+                    {% for file_name in available_files %}
+                    <li class="file-list-item">
+                        <span class="filename">{{ file_name }}</span>
+                        <a href="{{ url_for('download_file_route', filename=file_name) }}" class="download-link-small">Unduh</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                 <p class="no-data">Tidak ada file Excel di folder '{{ EXCEL_STORAGE_DIR if EXCEL_STORAGE_DIR else "excel_files" }}'.</p>
+            {% endif %}
+        </div>
+
+        <div id="input" class="tab-content">
+            <h3>{{ 'Edit Data Manifest' if form_data and form_data.get('editing_excel_row_num') else 'Formulir Input Data Baru' }}
+                {% if active_excel_file %} (ke File: {{ active_excel_file }}) {% endif %}
+            </h3>
+            {% if not active_excel_file and not (form_data and form_data.get('editing_excel_row_num')) %}
+                <p style="text-align: center; color: #e74c3c;"><strong>Peringatan:</strong> Tidak ada file aktif. Silakan pilih atau buat file di tab "Beranda & Pilih File" terlebih dahulu untuk menginput data.</p>
+            {% else %}
+                <form id="manifestEntryForm" 
+                      action="{{ url_for('update_entry_route') if form_data and form_data.get('editing_excel_row_num') else url_for('submit_entry_route') }}" 
+                      method="POST">
+                    {% if form_data and form_data.get('editing_excel_row_num') %}
+                        <input type="hidden" name="editing_excel_row_num" value="{{ form_data.get('editing_excel_row_num') }}">
+                        <input type="hidden" name="editing_filename" value="{{ form_data.get('editing_filename', active_excel_file) }}">
+                    {% endif %}
+                    <div id="form-bagian-awal">
+                        <div class="form-group">
+                            <label for="html_full_name">NAMA LENGKAP (FULL NAME) (*):</label>
+                            <input type="text" id="html_full_name" name="form_full_name" placeholder="Masukkan nama lengkap..." required 
+                                   value="{{ form_data.get('form_full_name', '') if form_data else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="html_sex">JENIS KELAMIN (SEX):</label>
+                            <select id="html_sex" name="form_sex">
+                                <option value="" {% if not form_data or not form_data.get('form_sex') %}selected{% endif %}>-- Pilih Jenis Kelamin --</option>
+                                <option value="M" {% if form_data and form_data.get('form_sex') == 'M' %}selected{% endif %}>Laki-laki (M)</option>
+                                <option value="F" {% if form_data and form_data.get('form_sex') == 'F' %}selected{% endif %}>Perempuan (F)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="html_place_of_birth">TEMPAT LAHIR (PLACE OF BIRTH):</label>
+                            <input type="text" id="html_place_of_birth" name="form_place_of_birth" 
+                                   value="{{ form_data.get('form_place_of_birth', '') if form_data else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="html_date_of_birth">TANGGAL LAHIR (DATE OF BIRTH):</label>
+                            <input type="date" id="html_date_of_birth" name="form_date_of_birth"
+                                   value="{{ form_data.get('form_date_of_birth', '') if form_data else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="html_pasport_no">NOMOR PASPOR (PASPORT NO):</label>
+                            <input type="text" id="html_pasport_no" name="form_pasport_no"
+                                   value="{{ form_data.get('form_pasport_no', '') if form_data else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="html_date_of_issue">TANGGAL PENERBITAN PASPOR (DATE OF ISSUE):</label>
+                            <input type="date" id="html_date_of_issue" name="form_date_of_issue"
+                                   value="{{ form_data.get('form_date_of_issue', '') if form_data else '' }}"
+                                   onchange="checkPassportExpiry(document.getElementById('html_date_of_expiry'))">
+                        </div>
+                        <div class="form-group">
+                            <label for="html_date_of_expiry">TANGGAL KEDALUWARSA PASPOR (DATE OF EXPIRY):</label>
+                            <input type="date" id="html_date_of_expiry" name="form_date_of_expiry"
+                                   value="{{ form_data.get('form_date_of_expiry', '') if form_data else '' }}"
+                                   onchange="checkPassportExpiry(this)"> 
+                            <span id="html_date_of_expiry_warning" class="validation-message warning"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="html_issuing_office">KANTOR PENERBIT PASPOR (ISSUING OFFICE):</label>
+                            <input type="text" id="html_issuing_office" name="form_issuing_office"
+                                   value="{{ form_data.get('form_issuing_office', '') if form_data else '' }}">
+                        </div>
+                    </div> 
+                    <div id="form-lanjutan">
+                        <div class="form-group">
+                            <label for="html_meningitis_expiry">TANGGAL KEDALUWARSA VAKSIN MENINGITIS (MENINGITIS EXPIRY):</label>
+                            <input type="date" id="html_meningitis_expiry" name="form_meningitis_expiry"
+                                   value="{{ form_data.get('form_meningitis_expiry', '') if form_data else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="html_nama_sesuai_vaksin">NAMA SESUAI SERTIFIKAT VAKSIN (NAMA SESUAI VAKSIN):</label>
+                            <input type="text" id="html_nama_sesuai_vaksin" name="form_nama_sesuai_vaksin"
+                                   value="{{ form_data.get('form_nama_sesuai_vaksin', '') if form_data else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="html_nomor_bpjs">NOMOR BPJS (13 digit angka jika ada):</label>
+                            <input type="text" id="html_nomor_bpjs" name="form_nomor_bpjs" pattern="\d{13}|" title="Nomor BPJS harus 13 digit angka, atau kosongkan." maxlength="13"
+                                   value="{{ form_data.get('form_nomor_bpjs', '') if form_data else '' }}"
+                                   onkeyup="validateNoBPJS(this)"> 
+                            <span id="html_nomor_bpjs_error" class="validation-message"></span> 
+                        </div>
+                        <div class="form-group">
+                            <label for="html_mahram">MAHRAM:</label>
+                            <input type="text" id="html_mahram" name="form_mahram"
+                                   value="{{ form_data.get('form_mahram', '') if form_data else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="html_nama_ayah">NAMA AYAH:</label>
+                            <input type="text" id="html_nama_ayah" name="form_nama_ayah"
+                                   value="{{ form_data.get('form_nama_ayah', '') if form_data else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="html_nik">NIK (Nomor Induk Kependudukan) (16 digit angka):</label>
+                            <input type="text" id="html_nik" name="form_nik" pattern="\d{16}|" title="NIK harus terdiri dari 16 digit angka, atau kosongkan." minlength="16" maxlength="16"
+                                   value="{{ form_data.get('form_nik', '') if form_data else '' }}"
+                                   onkeyup="validateNIK(this)"> 
+                            <span id="html_nik_error" class="validation-message"></span> 
+                        </div>
+                        <div class="form-group">
+                            <label for="html_alamat">ALAMAT LENGKAP:</label>
+                            <textarea id="html_alamat" name="form_alamat" rows="3">{{ form_data.get('form_alamat', '') if form_data else '' }}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="html_provinsi">PROVINSI:</label>
+                            <input type="text" id="html_provinsi" name="form_provinsi"
+                                   value="{{ form_data.get('form_provinsi', '') if form_data else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="html_kabupaten">KABUPATEN/KOTA:</label>
+                            <input type="text" id="html_kabupaten" name="form_kabupaten"
+                                   value="{{ form_data.get('form_kabupaten', '') if form_data else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="html_kecamatan">KECAMATAN:</label>
+                            <input type="text" id="html_kecamatan" name="form_kecamatan"
+                                   value="{{ form_data.get('form_kecamatan', '') if form_data else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="html_kelurahan">KELURAHAN/DESA:</label>
+                            <input type="text" id="html_kelurahan" name="form_kelurahan"
+                                   value="{{ form_data.get('form_kelurahan', '') if form_data else '' }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="html_no_hp">NOMOR HANDPHONE (NO. HP) (10-15 digit):</label>
+                            <input type="text" id="html_no_hp" name="form_no_hp" pattern="(^\+?\d{10,15}$)|" title="Nomor HP valid, contoh: 081234567890 atau +6281234567890, atau kosongkan." minlength="10" maxlength="16"
+                                   value="{{ form_data.get('form_no_hp', '') if form_data else '' }}"
+                                   onkeyup="validateNoHP(this)"> 
+                            <span id="html_no_hp_error" class="validation-message"></span> 
+                        </div>
+                        <div class="form-group">
+                            <label for="html_status_pernikahan">STATUS PERNIKAHAN:</label>
+                            <select id="html_status_pernikahan" name="form_status_pernikahan">
+                                <option value="" {% if not form_data or not form_data.get('form_status_pernikahan') %}selected{% endif %}>-- Pilih Status --</option>
+                                <option value="Belum Menikah" {% if form_data and form_data.get('form_status_pernikahan') == 'Belum Menikah' %}selected{% endif %}>Belum Menikah</option>
+                                <option value="Menikah" {% if form_data and form_data.get('form_status_pernikahan') == 'Menikah' %}selected{% endif %}>Menikah</option>
+                                <option value="Cerai Hidup" {% if form_data and form_data.get('form_status_pernikahan') == 'Cerai Hidup' %}selected{% endif %}>Cerai Hidup</option>
+                                <option value="Cerai Mati" {% if form_data and form_data.get('form_status_pernikahan') == 'Cerai Mati' %}selected{% endif %}>Cerai Mati</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="html_pendidikan">PENDIDIKAN TERAKHIR:</label>
+                            <select id="html_pendidikan" name="form_pendidikan">
+                                <option value="" {% if not form_data or not form_data.get('form_pendidikan') %}selected{% endif %}>-- Pilih Pendidikan --</option>
+                                <option value="SD" {% if form_data and form_data.get('form_pendidikan') == 'SD' %}selected{% endif %}>SD</option>
+                                <option value="SMP" {% if form_data and form_data.get('form_pendidikan') == 'SMP' %}selected{% endif %}>SMP</option>
+                                <option value="SMA" {% if form_data and form_data.get('form_pendidikan') == 'SMA' %}selected{% endif %}>SMA/SMK</option>
+                                <option value="Diploma" {% if form_data and form_data.get('form_pendidikan') == 'Diploma' %}selected{% endif %}>Diploma (D1/D2/D3)</option>
+                                <option value="Sarjana" {% if form_data and form_data.get('form_pendidikan') == 'Sarjana' %}selected{% endif %}>Sarjana (S1)</option>
+                                <option value="Magister" {% if form_data and form_data.get('form_pendidikan') == 'Magister' %}selected{% endif %}>Magister (S2)</option>
+                                <option value="Doktor" {% if form_data and form_data.get('form_pendidikan') == 'Doktor' %}selected{% endif %}>Doktor (S3)</option>
+                                <option value="Lainnya" {% if form_data and form_data.get('form_pendidikan') == 'Lainnya' %}selected{% endif %}>Lainnya</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="html_pekerjaan">PEKERJAAN:</label>
+                            <select id="html_pekerjaan" name="form_pekerjaan">
+                                <option value="" {% if not form_data or not form_data.get('form_pekerjaan') %}selected{% endif %}>-- Pilih Pekerjaan --</option>
+                                <option value="PNS" {% if form_data and form_data.get('form_pekerjaan') == 'PNS' %}selected{% endif %}>PNS/ASN</option>
+                                <option value="Karyawan Swasta" {% if form_data and form_data.get('form_pekerjaan') == 'Karyawan Swasta' %}selected{% endif %}>Karyawan Swasta</option>
+                                <option value="Wirausaha" {% if form_data and form_data.get('form_pekerjaan') == 'Wirausaha' %}selected{% endif %}>Wirausaha</option>
+                                <option value="Pelajar/Mahasiswa" {% if form_data and form_data.get('form_pekerjaan') == 'Pelajar/Mahasiswa' %}selected{% endif %}>Pelajar/Mahasiswa</option>
+                                <option value="Ibu Rumah Tangga" {% if form_data and form_data.get('form_pekerjaan') == 'Ibu Rumah Tangga' %}selected{% endif %}>Ibu Rumah Tangga</option>
+                                <option value="Pensiunan" {% if form_data and form_data.get('form_pekerjaan') == 'Pensiunan' %}selected{% endif %}>Pensiunan</option>
+                                <option value="Belum/Tidak Bekerja" {% if form_data and form_data.get('form_pekerjaan') == 'Belum/Tidak Bekerja' %}selected{% endif %}>Belum/Tidak Bekerja</option>
+                                <option value="Lainnya" {% if form_data and form_data.get('form_pekerjaan') == 'Lainnya' %}selected{% endif %}>Lainnya</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="html_type_of_room">TIPE KAMAR (TYPE OF ROOM):</label>
+                            <select id="html_type_of_room" name="form_type_of_room">
+                                <option value="" {% if not form_data or not form_data.get('form_type_of_room') %}selected{% endif %}>-- Pilih Tipe Kamar --</option>
+                                <option value="Single" {% if form_data and form_data.get('form_type_of_room') == 'Single' %}selected{% endif %}>Single</option>
+                                <option value="Double" {% if form_data and form_data.get('form_type_of_room') == 'Double' %}selected{% endif %}>Double</option>
+                                <option value="Triple" {% if form_data and form_data.get('form_type_of_room') == 'Triple' %}selected{% endif %}>Triple</option>
+                                <option value="Quad" {% if form_data and form_data.get('form_type_of_room') == 'Quad' %}selected{% endif %}>Quad</option>
+                                <option value="Quint" {% if form_data and form_data.get('form_type_of_room') == 'Quint' %}selected{% endif %}>Quint</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="html_branch">CABANG (BRANCH):</label>
+                            <input type="text" id="html_branch" name="form_branch"
+                                   value="{{ form_data.get('form_branch', '') if form_data else '' }}">
+                        </div>
+                    </div> 
+                    <div class="form-buttons-container">
+                        <button type="submit">
+                            {% if form_data and form_data.get('editing_excel_row_num') %}
+                                Update Data
+                            {% else %}
+                                Simpan Data ke File Aktif
+                            {% endif %}
+                        </button>
+                        <button type="button" id="btnToggleLanjutan" onclick="toggleFormLanjutan()">Lanjutkan Mengisi Lengkap</button>
+                    </div>
+                </form>
+            {% endif %} 
+        </div>
+
+        <div id="preview" class="tab-content">
+            <h3>Preview Data Manifest (File Aktif: {{ active_excel_file if active_excel_file else "Belum Dipilih" }})</h3>
+            {% if active_excel_file %}
+                <a href="{{ url_for('download_file_route', filename=active_excel_file) }}" class="download-button" style="margin-bottom: 15px; display: inline-block;">Unduh File Aktif ({{ active_excel_file }})</a>
+            {% endif %}
+
+            {% if active_excel_file and pagination and pagination['items'] %}
+                <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr> 
+                            {% for header_name in headers %} 
+                                <th>{{ header_name }}</th> 
+                            {% endfor %}
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row_data_with_id in pagination['items'] %}
+                            <tr> 
+                                {% for cell_data in row_data_with_id['values'] %} 
+                                    <td>{{ cell_data }}</td> 
+                                {% endfor %}
+                                <td>
+                                    <a href="{{ url_for('edit_entry_route', filename=active_excel_file, excel_row_num=row_data_with_id.excel_row_num) }}" class="action-link">Edit</a>
+                                    {% if user and user.is_authenticated and user.role == 'superuser' %}
+                                    <form action="{{ url_for('delete_entry_route', filename=active_excel_file, excel_row_num=row_data_with_id.excel_row_num) }}" method="POST" style="display: inline;" onsubmit="return confirmDelete();">
+                                        <button type="submit" class="action-button delete">Hapus</button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                </div>
+                <div class="pagination">
+                    {% if pagination.has_prev %}
+                        <a href="{{ url_for('main_page_route', page=pagination.prev_num, tab='preview') }}">&laquo; Sebelumnya</a>
+                    {% else %}
+                        <span class="ellipsis">&laquo; Sebelumnya</span>
+                    {% endif %}
+                    {% for p_num in range(1, pagination.total_pages + 1) %}
+                        {% if pagination.page == p_num %}
+                            <strong class="current-page">{{ p_num }}</strong>
+                        {% else %}
+                            <a href="{{ url_for('main_page_route', page=p_num, tab='preview') }}">{{ p_num }}</a>
+                        {% endif %}
+                    {% endfor %}
+                    {% if pagination.has_next %}
+                        <a href="{{ url_for('main_page_route', page=pagination.next_num, tab='preview') }}">Berikutnya &raquo;</a>
+                    {% else %}
+                        <span class="ellipsis">Berikutnya &raquo;</span>
+                    {% endif %}
+                </div>
+                <p style="text-align:center; font-size:0.9em; color:#aaa;">
+                    Halaman {{ pagination.page }} dari {{ pagination.total_pages }} (Total {{ pagination.total_items }} data)
+                </p>
+            {% elif active_excel_file %}
+                <p class="no-data">Belum ada data manifest yang tersimpan di file {{ active_excel_file }}.</p>
+            {% else %}
+                 <p class="no-data">Pilih atau buat file di tab "Beranda & Pilih File" untuk melihat data.</p>
+            {% endif %}
+        </div>
+
+        {% if user and user.is_authenticated and user.role == 'superuser' %}
+        <div id="manage_users" class="tab-content">
+            <h3>Manajemen Pengguna</h3>
+            
+            <div class="user-management-section">
+                <h4>Pengguna Menunggu Persetujuan</h4>
+                {% if pending_users %}
+                    <ul class="user-list">
+                        {% for p_user in pending_users %}
+                            <li>
+                                <span class="user-details">
+                                    {{ p_user.username }} 
+                                    <span class="user-status-pending">(Menunggu Persetujuan)</span>
+                                </span>
+                                <span class="actions">
+                                    <form action="{{ url_for('approve_user_route', user_id_to_approve=p_user.id) }}" method="POST" style="display:inline;">
+                                        <button type="submit" class="action-button approve">Setujui</button>
+                                    </form>
+                                    <form action="{{ url_for('reject_user_route', user_id_to_reject=p_user.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Anda yakin ingin menolak dan menghapus pendaftaran pengguna {{ p_user.username }}?');">
+                                        <button type="submit" class="action-button reject">Tolak</button>
+                                    </form>
+                                </span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="no-data">Tidak ada pengguna yang menunggu persetujuan.</p>
+                {% endif %}
+            </div>
+            <hr>
+            <div class="user-management-section">
+                <h4>Tambah Pengguna Baru (oleh Admin)</h4>
+                <form action="{{ url_for('add_user_by_admin_route') }}" method="POST">
+                    <div class="form-group">
+                        <label for="new_username">Username Baru:</label>
+                        <input type="text" id="new_username" name="new_username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new_password">Password Baru (min. 6 karakter):</label>
+                        <input type="password" id="new_password" name="new_password" required minlength="6">
+                    </div>
+                    <div class="form-group">
+                        <label for="new_confirm_password">Konfirmasi Password Baru:</label>
+                        <input type="password" id="new_confirm_password" name="new_confirm_password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new_role">Peran Pengguna:</label>
+                        <select id="new_role" name="new_role">
+                            <option value="user" selected>User Biasa</option>
+                            <option value="superuser">Superuser</option>
+                        </select>
+                    </div>
+                    <button type="submit">Tambah Pengguna</button>
+                </form>
+            </div>
+            <hr>
+            <div class="user-management-section">
+                <h4>Daftar Pengguna Aktif & Superuser</h4>
+                {% if all_users %}
+                    <ul class="user-list">
+                        {% for u_data in all_users %}
+                            <li>
+                                <span class="user-details">
+                                    {{ u_data.username }} 
+                                    <span class="user-role">({{ u_data.role }})</span>
+                                </span>
+                                {% if u_data.id != user.id %} 
+                                <form action="{{ url_for('delete_user_by_admin_route', user_id_to_delete=u_data.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Anda yakin ingin menghapus pengguna {{ u_data.username }}?');">
+                                    <button type="submit" class="action-button delete">Hapus User</button>
+                                </form>
+                                {% else %}
+                                    <span style="font-size:0.8em; color:#888;">(Akun Anda)</span>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="no-data">Tidak ada pengguna aktif atau superuser lain yang terdaftar (selain Anda jika Anda superuser).</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div> 
+
+    <script>
+        // === SEMUA JAVASCRIPT ADA DI SINI ===
+        function confirmDelete() {
+            if (event && event.target.closest('form[action*="delete_entry"]')) {
+                 return confirm("Anda yakin ingin menghapus data manifest ini? Aksi ini tidak dapat dibatalkan.");
+            }
+            // Konfirmasi untuk hapus user sudah ada di onsubmit formnya masing-masing.
+            return true; 
+        }
+
+        function validateNIK(inputElement) {
+            const value = inputElement.value;
+            const errorElement = document.getElementById(inputElement.id + '_error');
+            const nikPattern = /^\d{16}$/; 
+            if (!errorElement) return true; 
+            if (value === "") { 
+                errorElement.textContent = '';
+                inputElement.classList.remove('invalid', 'valid');
+                return true;
+            }
+            if (nikPattern.test(value)) {
+                errorElement.textContent = ''; 
+                inputElement.classList.remove('invalid');
+                inputElement.classList.add('valid');
+                return true;
+            } else {
+                errorElement.textContent = 'NIK harus 16 digit angka.';
+                inputElement.classList.remove('valid');
+                inputElement.classList.add('invalid');
+                return false;
+            }
+        }
+
+        function validateNoHP(inputElement) {
+            const value = inputElement.value;
+            const errorElement = document.getElementById(inputElement.id + '_error');
+            const noHpPattern = /^\+?\d{10,15}$/; 
+            if (!errorElement) return true;
+            if (value === "") { 
+                errorElement.textContent = '';
+                inputElement.classList.remove('invalid', 'valid');
+                return true;
+            }
+            if (noHpPattern.test(value)) {
+                errorElement.textContent = '';
+                inputElement.classList.remove('invalid');
+                inputElement.classList.add('valid');
+                return true;
+            } else {
+                errorElement.textContent = 'Format No. HP tidak valid (10-15 digit, bisa diawali +).';
+                inputElement.classList.remove('valid');
+                inputElement.classList.add('invalid');
+                return false;
+            }
+        }
+
+        function validateNoBPJS(inputElement) {
+            const value = inputElement.value;
+            const errorElement = document.getElementById(inputElement.id + '_error');
+            const noBpjsPattern = /^\d{13}$/; 
+            if (!errorElement) return true;
+            if (value === "") { 
+                errorElement.textContent = '';
+                inputElement.classList.remove('invalid', 'valid');
+                return true;
+            }
+            if (noBpjsPattern.test(value)) {
+                errorElement.textContent = '';
+                inputElement.classList.remove('invalid');
+                inputElement.classList.add('valid');
+                return true;
+            } else {
+                errorElement.textContent = 'Nomor BPJS harus 13 digit angka.';
+                inputElement.classList.remove('valid');
+                inputElement.classList.add('invalid');
+                return false;
+            }
+        }
+
+        function toggleBerandaFileInputs() {
+            const choiceElement = document.querySelector('input[name="file_choice"]:checked');
+            if (!choiceElement) { 
+                const existingFileSelect = document.getElementById('beranda_existing_excel_filename');
+                let defaultChoice = 'new_file'; 
+                if (existingFileSelect && existingFileSelect.options.length > 0 && existingFileSelect.options[0].value !== "") {
+                    defaultChoice = 'existing_file';
+                }
+                const radioToSelect = document.querySelector('input[name="file_choice"][value="' + defaultChoice + '"]');
+                if(radioToSelect) radioToSelect.checked = true;
+                const newChoiceElem = document.querySelector('input[name="file_choice"]:checked');
+                if(newChoiceElem) toggleVisibility(newChoiceElem.value);
+                return;
+            }
+            toggleVisibility(choiceElement.value);
+        }
+
+        function toggleVisibility(choice) {
+            const newFileGroup = document.getElementById('berandaNewFileGroup');
+            const existingFileGroup = document.getElementById('berandaExistingFileGroup');
+            const newFileNameInput = document.getElementById('beranda_new_excel_filename');
+            const existingFileNameSelect = document.getElementById('beranda_existing_excel_filename');
+
+            if (choice === 'new_file') {
+                if(newFileGroup) newFileGroup.style.display = 'block';
+                if(existingFileGroup) existingFileGroup.style.display = 'none';
+                if(newFileNameInput) newFileNameInput.required = true; 
+                if(existingFileNameSelect) existingFileNameSelect.required = false;
+            } else { 
+                if(newFileGroup) newFileGroup.style.display = 'none';
+                if(existingFileGroup) existingFileGroup.style.display = 'block';
+                if(newFileNameInput) newFileNameInput.required = false;
+                if(existingFileNameSelect && existingFileNameSelect.options.length > 0 && existingFileNameSelect.options[0].value !== "") {
+                    if(existingFileNameSelect) existingFileNameSelect.required = true; 
+                } else {
+                     if(existingFileNameSelect) existingFileNameSelect.required = false;
+                }
+            }
+        }
+
+        function openTab(event, tabName) {
+            let i, tabcontent, tabbuttons;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+                tabcontent[i].classList.remove("active");
+            }
+            tabbuttons = document.getElementsByClassName("tab-button");
+            for (i = 0; i < tabbuttons.length; i++) {
+                tabbuttons[i].classList.remove("active");
+            }
+            const currentTabElement = document.getElementById(tabName);
+            if(currentTabElement) {
+                currentTabElement.style.display = "block";
+                currentTabElement.classList.add("active");
+            }
+            
+            let buttonToActivate;
+            if(event && event.currentTarget) { 
+                 event.currentTarget.classList.add("active");
+                 buttonToActivate = event.currentTarget;
+            } else { 
+                buttonToActivate = document.querySelector(`.tab-button[onclick*="'${tabName}'"]`);
+                if (buttonToActivate) buttonToActivate.classList.add("active");
+            }
+            localStorage.setItem('activeManifestTab', tabName);
+        }
+        
+        function toggleFormLanjutan() {
+            const formLanjutan = document.getElementById('form-lanjutan');
+            const btnToggle = document.getElementById('btnToggleLanjutan');
+            if (!formLanjutan || !btnToggle) return; 
+
+            if (formLanjutan.style.display === 'none' || formLanjutan.style.display === '') {
+                formLanjutan.style.display = 'block';
+                btnToggle.textContent = 'Sembunyikan Detail Tambahan';
+            } else {
+                formLanjutan.style.display = 'none';
+                btnToggle.textContent = 'Lanjutkan Mengisi Lengkap';
+            }
+        }
+        
+        function checkPassportExpiry(expiryInput) {
+            const expiryDateStr = expiryInput.value;
+            const warningElement = document.getElementById(expiryInput.id + '_warning');
+            if (!warningElement) return;
+
+            warningElement.textContent = ''; 
+            expiryInput.classList.remove('warning-border'); 
+
+            if (!expiryDateStr) return;
+
+            try {
+                const expiryDate = new Date(expiryDateStr + "T00:00:00"); 
+                if (isNaN(expiryDate.getTime())) return;
+
+                const today = new Date();
+                today.setHours(0,0,0,0); 
+
+                if (expiryDate < today) {
+                    warningElement.textContent = 'PERINGATAN: Paspor sudah kedaluwarsa!';
+                    expiryInput.classList.add('warning-border');
+                    return;
+                }
+
+                let eightMonthsFromNow = new Date();
+                eightMonthsFromNow.setMonth(eightMonthsFromNow.getMonth() + 8);
+                eightMonthsFromNow.setHours(0,0,0,0);
+
+                if (expiryDate < eightMonthsFromNow) {
+                    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+                    warningElement.textContent = 'PERINGATAN: Masa berlaku paspor kurang dari 8 bulan (hingga ' + expiryDate.toLocaleDateString('id-ID', options) + ').';
+                    expiryInput.classList.add('warning-border');
+                }
+            } catch (e) {
+                console.error("Error di checkPassportExpiry:", e);
+            }
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            body.classList.toggle('dark-theme-active');
+            if (body.classList.contains('dark-theme-active')) {
+                localStorage.setItem('theme', 'dark');
+            } else {
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-theme-active');
+            } else {
+                document.body.classList.remove('dark-theme-active'); 
+            }
+
+            const berandaChoiceRadios = document.querySelectorAll('input[name="file_choice"]');
+            if(berandaChoiceRadios.length > 0){ 
+                const fileChoiceFromFlask = "{{ (form_data.get('file_choice') if form_data else session.get('last_file_choice')) or 'existing_file' }}";
+                let radioToSelect = document.querySelector('input[name="file_choice"][value="' + fileChoiceFromFlask + '"]');
+                if (radioToSelect) { 
+                    radioToSelect.checked = true; 
+                } else { 
+                    const existingFileSelect = document.getElementById('beranda_existing_excel_filename');
+                    if (existingFileSelect && existingFileSelect.options.length > 0 && existingFileSelect.options[0].value !== "") {
+                         const existingRadio = document.querySelector('input[name="file_choice"][value="existing_file"]');
+                         if(existingRadio) existingRadio.checked = true;
+                    } else {
+                         const newFileRadio = document.querySelector('input[name="file_choice"][value="new_file"]');
+                         if(newFileRadio) newFileRadio.checked = true;
+                    }
+                }
+                toggleBerandaFileInputs();
+                berandaChoiceRadios.forEach(radio => {
+                    radio.addEventListener('change', toggleBerandaFileInputs);
+                });
+            }
+
+            let flaskInitialTab = '{{ initial_tab if initial_tab else "beranda" }}';
+            let finalInitialTab = flaskInitialTab;
+            const urlParams = new URLSearchParams(window.location.search);
+            const tabParamFromUrl = urlParams.get('tab'); 
+
+            if (tabParamFromUrl) { 
+                finalInitialTab = tabParamFromUrl;
+            } else if (flaskInitialTab && flaskInitialTab !== 'beranda' && flaskInitialTab !== 'None' && flaskInitialTab) { 
+                finalInitialTab = flaskInitialTab;
+            } else { 
+                finalInitialTab = localStorage.getItem('activeManifestTab') || 'beranda';
+            }
+            
+            const isEditingMode = {{ 'true' if form_data and form_data.get('editing_excel_row_num') else 'false' }};
+            if (isEditingMode) {
+                finalInitialTab = 'input'; 
+            }
+            
+            const tabButtonToActivate = document.querySelector(`.tab-button[onclick*="'${finalInitialTab}'"]`);
+            if (tabButtonToActivate) {
+                openTab(null, finalInitialTab); 
+            } else {
+                const firstTabButton = document.getElementsByClassName("tab-button")[0];
+                if (firstTabButton) {
+                    const firstTabName = firstTabButton.getAttribute('onclick').match(/'([^']+)'/)[1];
+                    openTab(null, firstTabName);
+                }
+            }
+
+            const formLanjutan = document.getElementById('form-lanjutan');
+            const btnToggleLanjutan = document.getElementById('btnToggleLanjutan');
+            if (isEditingMode) { 
+                if(formLanjutan) formLanjutan.style.display = 'block';
+                if(btnToggleLanjutan) btnToggleLanjutan.textContent = 'Sembunyikan Detail Tambahan';
+            } else { 
+                if (finalInitialTab === 'input') { 
+                    if(formLanjutan) formLanjutan.style.display = 'none'; 
+                    if(btnToggleLanjutan) btnToggleLanjutan.textContent = 'Lanjutkan Mengisi Lengkap';
+                } else if (formLanjutan) { 
+                     formLanjutan.style.display = 'none'; 
+                     if(btnToggleLanjutan) btnToggleLanjutan.textContent = 'Lanjutkan Mengisi Lengkap';
+                }
+            }
+
+            if (isEditingMode) {
+                const expiryInput = document.getElementById('html_date_of_expiry');
+                if (expiryInput && expiryInput.value) {
+                    checkPassportExpiry(expiryInput);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+

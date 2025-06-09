@@ -1,0 +1,16 @@
+{
+    "3": {
+        "username": "edo",
+        "password": "pbkdf2:sha256:1000000$nluaRKjcCZYi2sbe$80dfdfd0a51e4fbc5964a1fa3755f2e614c7e7763cc4e71a74f35840e1184624",
+        "id": "3",
+        "role": "superuser",
+        "status": "superuser"
+    },
+    "4": {
+        "username": "admin",
+        "password": "pbkdf2:sha256:1000000$bn4vTGqursVMFIxS$432b53085f48ae0c66078a0575e1300027760d9d9a174c58655679ef0958fc79",
+        "id": "4",
+        "role": "user",
+        "status": "active"
+    }
+}
